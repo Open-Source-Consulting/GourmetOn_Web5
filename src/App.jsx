@@ -5,7 +5,7 @@ import MealDetails from "./components/MealDetails.jsx";
 
 function App() {
   // -----------------------------
-  // 1. ESTADOS DO COMPONENTE
+  // 1. ESTADOS DOO COMPONENTE
   // -----------------------------
   const [menuAberto, setMenuAberto] = useState(false);
   const [menuComFundo, setMenuComFundo] = useState(false);
