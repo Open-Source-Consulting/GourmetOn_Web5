@@ -13,6 +13,8 @@ export default function MealDetails({ meal, onClose }) {
 
     // A lista de ingredientes rola dentro do modal; o fundo fica parado.
     const overflowAnterior = document.body.style.overflow;
+
+    // Bloqueia a rolagem
     document.body.style.overflow = "hidden";
 
     return () => {

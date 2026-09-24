@@ -4,7 +4,7 @@ Aplicação desenvolvida para o Check-Point 05 da disciplina de Web Development 
 
 O GourmetOn é uma landing page fictícia para um aplicativo de delivery. A página apresenta os benefícios do serviço, consulta pratos de uma API pública, permite filtrar o cardápio e possui um formulário para cadastro de e-mail.
 
-**Aplicação publicada:** 
+**Aplicação publicada:** https://gourmet-on-web5.vercel.app/
 
 ## Funcionalidades
 
