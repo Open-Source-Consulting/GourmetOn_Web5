@@ -129,7 +129,7 @@ Executar `npm run build`, conferir a página em computador e celular, publicar a
 - Leonardo Ferreira
 - Jecky Cossio
 - Felipe Bandeira Pedrol
-- Felipi Godoy
+
 
 ## Referências de interface
 
