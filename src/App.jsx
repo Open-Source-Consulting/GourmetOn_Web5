@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { getMeals } from "./services/mealApi.js";
+import {
+  getMealById,
+  getMealsGroupedByCategory,
+} from "./services/mealApi.js";
 import MealDetails from "./components/MealDetails.jsx";
 
 function App() {
@@ -9,11 +12,13 @@ function App() {
   // -----------------------------
   const [menuAberto, setMenuAberto] = useState(false);
   const [menuComFundo, setMenuComFundo] = useState(false);
-  const [pratos, setPratos] = useState([]);
+  const [pratosPorCategoria, setPratosPorCategoria] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erroApi, setErroApi] = useState(false);
   const [categoria, setCategoria] = useState("Todos");
   const [pratoSelecionado, setPratoSelecionado] = useState(null);
+  const [pratoCarregando, setPratoCarregando] = useState(null);
+  const [erroDetalhes, setErroDetalhes] = useState(false);
   const [email, setEmail] = useState("");
   const [emailEnviado, setEmailEnviado] = useState(false);
 
@@ -32,7 +37,7 @@ function App() {
   }, []);
 
   // -----------------------------
-  // 3. BUSCA DOS PRATOS NA API
+  // 3. BUSCA DAS CATEGORIAS E DOS CINCO PRIMEIROS PRATOS
   // -----------------------------
   useEffect(() => {
     let ativo = true;
@@ -40,8 +45,8 @@ function App() {
       setCarregando(true);
 
       try {
-        const dados = await getMeals();
-        if (ativo) setPratos(dados);
+        const dados = await getMealsGroupedByCategory(5);
+        if (ativo) setPratosPorCategoria(dados);
       } catch (erro) {
         console.error("Erro ao buscar os pratos:", erro);
         if (ativo) setErroApi(true);
@@ -60,13 +65,33 @@ function App() {
   // -----------------------------
   const categorias = [
     "Todos",
-    ...new Set(pratos.map((prato) => prato.strCategory)),
+    ...pratosPorCategoria.map((grupo) => grupo.category),
   ];
 
-  const pratosFiltrados =
+  const gruposVisiveis =
     categoria === "Todos"
-      ? pratos
-      : pratos.filter((prato) => prato.strCategory === categoria);
+      ? pratosPorCategoria
+      : pratosPorCategoria.filter((grupo) => grupo.category === categoria);
+
+  const abrirDetalhes = async (id) => {
+    setPratoCarregando(id);
+    setErroDetalhes(false);
+
+    try {
+      const prato = await getMealById(id);
+
+      if (!prato) {
+        throw new Error("Prato não encontrado.");
+      }
+
+      setPratoSelecionado(prato);
+    } catch (erro) {
+      console.error("Erro ao buscar os detalhes do prato:", erro);
+      setErroDetalhes(true);
+    } finally {
+      setPratoCarregando(null);
+    }
+  };
 
   // -----------------------------
   // 5. FORMULÁRIO DE CONTATO
@@ -229,28 +254,45 @@ function App() {
               </p>
             )}
 
+            {erroDetalhes && (
+              <p className="mt-6 rounded-xl bg-[#ffe16a]/10 p-4 text-sm text-[#ffe16a]">
+                Não foi possível carregar os detalhes do prato. Tente novamente.
+              </p>
+            )}
+
             {carregando ? (
               <p className="mt-12 text-lg text-white/70">Carregando pratos...</p>
-            ) : !erroApi && pratosFiltrados.length === 0 ? (
+            ) : !erroApi && gruposVisiveis.length === 0 ? (
               <p className="mt-10 text-white/70">Nenhum prato encontrado.</p>
             ) : (
-              <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {pratosFiltrados.map((prato) => (
-                  <div key={prato.idMeal} className="overflow-hidden rounded-2xl bg-[#2b211c]">
-                    <img
-                      src={prato.strMealThumb}
-                      alt={prato.strMeal}
-                      className="h-56 w-full object-cover"
-                    />
-                    <div className="p-6">
-                      <span className="text-sm font-bold text-[#ffe16a]">{prato.strCategory}</span>
-                      <h3 className="mt-2 text-xl font-bold">{prato.strMeal}</h3>
-                      <p className="mt-3 text-sm text-white/60">Culinária: {prato.strArea || "Internacional"}</p>
-                      <button onClick={() => setPratoSelecionado(prato)} className="mt-5 rounded-lg bg-[#ffe16a] px-4 py-2 font-bold text-[#211813]" aria-label={`Ver detalhes de ${prato.strMeal}`}>
-                        Ver detalhes
-                      </button>
+              <div className="mt-12 space-y-16">
+                {gruposVisiveis.map((grupo) => (
+                  <section key={grupo.category}>
+                    <h3 className="text-3xl font-black">{grupo.category}</h3>
+                    <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {grupo.meals.map((prato) => (
+                        <div key={prato.idMeal} className="overflow-hidden rounded-2xl bg-[#2b211c]">
+                          <img
+                            src={prato.strMealThumb}
+                            alt={prato.strMeal}
+                            className="h-56 w-full object-cover"
+                          />
+                          <div className="p-6">
+                            <span className="text-sm font-bold text-[#ffe16a]">{prato.strCategory}</span>
+                            <h4 className="mt-2 text-xl font-bold">{prato.strMeal}</h4>
+                            <button
+                              onClick={() => abrirDetalhes(prato.idMeal)}
+                              disabled={pratoCarregando === prato.idMeal}
+                              className="mt-5 rounded-lg bg-[#ffe16a] px-4 py-2 font-bold text-[#211813] disabled:cursor-wait disabled:opacity-60"
+                              aria-label={`Ver detalhes de ${prato.strMeal}`}
+                            >
+                              {pratoCarregando === prato.idMeal ? "Carregando..." : "Ver detalhes"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </section>
                 ))}
               </div>
             )}

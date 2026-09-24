@@ -1,0 +1,184 @@
+GOURMETON — APRESENTAÇÃO EM 4 MINUTOS
+5 integrantes | Falas curtas + demonstração e trechos de código
+
+Deixar a página carregada e os arquivos abertos antes de começar.
+Os intervalos incluem a demonstração: não é preciso preencher todo
+o tempo falando. Não ler o código linha por linha.
+
+======================================================================
+INTEGRANTE 1 — 0:00 A 0:35
+PROJETO, TECNOLOGIAS E ESTRUTURA
+======================================================================
+
+NA TELA
+Mostrar a página e a árvore de src no editor.
+
+FALA
+“Bom dia a todos. Nosso projeto é a landing page do GourmetOn, com
+React, Vite e a API TheMealDB. O Tailwind foi usado na estilização
+e na responsividade.
+
+Concentramos a página e os estados no App.jsx, as consultas em
+services/mealApi.js e o modal em components/MealDetails.jsx.
+Mantivemos essa estrutura pequena porque o projeto é uma landing page
+de única página e não precisa de uma estruturação complexa.”
+
+======================================================================
+INTEGRANTE 2 — 0:35 A 1:20
+FETCH, API E JSON
+======================================================================
+
+NA TELA
+Abrir mealApi.js e apontar API_URL, request(), getCategories(),
+getMealsByCategory() e getMealById().
+
+FALA
+“Centralizamos as requisições na função request, que usa fetch e
+async/await. Ela verifica response.ok, lança um erro se a resposta
+HTTP falhar e depois lê o JSON com response.json().
+
+Primeiro, getCategories consulta list.php?c=list para obter todas
+as categorias. Depois, getMealsByCategory usa filter.php?c= e
+slice para retornar até cinco pratos de cada categoria.
+
+A função getMealsGroupedByCategory usa Promise.all para fazer essas
+consultas em paralelo e organizar os pratos em grupos. Como essa rota
+retorna dados resumidos, getMealById consulta lookup.php?i= quando
+precisamos dos ingredientes e das outras informações completas.”
+
+TRECHOS
+export async function getCategories() {
+  const data = await request("list.php?c=list");
+  return (data.meals ?? []).map((item) => item.strCategory);
+}
+
+return (data.meals ?? []).slice(0, limit);
+
+======================================================================
+INTEGRANTE 3 — 1:20 A 2:10
+HOOKS, ESTADO E TRATAMENTO DAS CONSULTAS
+======================================================================
+
+NA TELA
+App.jsx: estados e seção “3. BUSCA DAS CATEGORIAS E DOS CINCO
+PRIMEIROS PRATOS”. Apontar try, catch, finally e a limpeza do efeito.
+
+FALA
+“O useEffect inicia a consulta, e setPratosPorCategoria guarda os
+grupos retornados. Os estados carregando e erroApi controlam as
+mensagens da interface. O catch registra a falha e o finally encerra
+o carregamento.
+
+A variável ativo evita atualizar o estado com uma resposta que chegue
+depois da limpeza do efeito. Ela não cancela a requisição.
+
+Também guardamos a categoria e o prato selecionado no App. Os estados
+pratoCarregando e erroDetalhes controlam o carregamento e possíveis
+falhas da consulta feita ao abrir um prato. O modal recebe o objeto
+completo pela prop meal e a função de fechar por onClose.”
+
+TRECHOS
+const dados = await getMealsGroupedByCategory(5);
+if (ativo) setPratosPorCategoria(dados);
+
+<MealDetails
+  meal={pratoSelecionado}
+  onClose={() => setPratoSelecionado(null)}
+/>
+
+======================================================================
+INTEGRANTE 4 — 2:10 A 3:00
+FILTRO E DEMONSTRAÇÃO DO CARDÁPIO
+======================================================================
+
+NA TELA
+App.jsx: seção “4. CATEGORIAS E FILTRO”.
+Depois, no navegador:
+1. Mostrar que cada categoria possui até cinco pratos.
+2. Escolher uma categoria.
+3. Voltar a “Todos”.
+4. Abrir um prato.
+
+FALA
+“As categorias agora vêm diretamente da API. Cada grupo possui o nome
+da categoria e até cinco pratos.
+
+O filtro é feito localmente sobre esses grupos. Quando selecionamos
+‘Todos’, mostramos todas as categorias. Quando escolhemos uma categoria,
+mostramos somente o grupo correspondente, sem fazer outra requisição
+para trocar o filtro.
+
+Ao clicar em ‘Ver detalhes’, enviamos o ID para abrirDetalhes. Essa
+função busca os dados completos do prato e os guarda em
+pratoSelecionado. Enquanto isso, o botão mostra ‘Carregando...’ e
+fica temporariamente desabilitado.”
+
+TRECHOS
+const gruposVisiveis =
+  categoria === "Todos"
+    ? pratosPorCategoria
+    : pratosPorCategoria.filter(
+        (grupo) => grupo.category === categoria
+      );
+
+onClick={() => abrirDetalhes(prato.idMeal)}
+
+======================================================================
+INTEGRANTE 5 — 3:00 A 4:00
+MODAL, INGREDIENTES E ENCERRAMENTO
+======================================================================
+
+NA TELA
+Com o modal aberto, mostrar os dados do prato.
+Abrir MealDetails.jsx: referência ao dialog e laço dos ingredientes.
+Voltar ao navegador, fechar com Esc e confirmar o filtro preservado.
+
+FALA
+“Depois da busca dos dados completos pelo ID, o MealDetails recebe o
+prato pela prop meal. Ele usa o dialog nativo, aberto com showModal
+por uma referência criada com useRef. Isso permite usar o controle de
+foco e o fechamento por Esc do navegador, sem biblioteca adicional.
+
+Os ingredientes vêm em campos separados, de strIngredient1 até
+strIngredient20. Percorremos esses campos com um for e ignoramos
+os vazios. O modal mostra nome, origem, categoria e os ingredientes
+informados pela API.
+
+A rolagem fica dentro do modal, e a limpeza do efeito libera o fundo
+ao fechar. Fechar o modal não altera a categoria selecionada. O
+formulário e o download são demonstrativos. Para o deploy na Vercel,
+usamos o build padrão do Vite.”
+
+TRECHO
+for (let i = 1; i <= 20; i++) {
+  const ingredient = meal[`strIngredient${i}`];
+
+  if (ingredient && ingredient.trim()) {
+    ingredients.push(<li key={i}>{ingredient}</li>);
+  }
+}
+
+======================================================================
+NOTAS PARA O ENSAIO — NÃO FAZEM PARTE DA FALA
+======================================================================
+
+- Reservar tempo para os cliques e as trocas de arquivo.
+- Não definir React, JSX, props ou JSON: mostrar como foram usados aqui.
+- Explicar que são exibidos até cinco pratos de cada categoria, e não todo o catálogo.
+- A troca do filtro é local; somente a abertura dos detalhes faz uma nova consulta.
+- A rota de categorias retorna dados resumidos; os ingredientes vêm da busca pelo ID.
+- No StrictMode, o efeito pode rodar novamente em desenvolvimento.
+- Não afirmar que a página está publicada sem conferir o deploy.
+- Se perguntarem sobre dificuldades, relatar as que o grupo enfrentou;
+  os casos tratados no código incluem falha da API, falha na busca dos
+  detalhes e ingredientes vazios.
+
+======================================================================
+RESUMO DO QUE MUDOU EM RELAÇÃO AO ROTEIRO ANTERIOR
+======================================================================
+
+- Integrante 1: quase nenhuma mudança; apenas passou a mencionar “as consultas”.
+- Integrante 2: parte mais alterada; agora explica as novas funções e endpoints da API.
+- Integrante 3: mudança média; explica os grupos e os novos estados de detalhes.
+- Integrante 4: parte bastante alterada; explica grupos, limite de cinco pratos e busca por ID.
+- Integrante 5: pequena mudança; informa que o modal recebe os dados completos buscados pelo ID.

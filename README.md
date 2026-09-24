@@ -23,7 +23,7 @@ Não é necessário um arquivo `vercel.json`: a página usa navegação por ânc
 - seção principal com chamada e botões;
 - apresentação dos benefícios do aplicativo;
 - cardápio carregado pela TheMealDB;
-- filtro de pratos por categoria;
+- até cinco pratos de cada categoria, com filtro por categoria;
 - detalhes com nome, categoria, origem e todos os ingredientes informados pela API;
 - mensagem de carregamento;
 - tratamento de erro da API;
@@ -64,9 +64,9 @@ vite.config.js
 
 O código usa dois componentes e um serviço:
 
-- `App.jsx`: página, estados, efeitos, filtro por categoria e formulário.
+- `App.jsx`: página, estados, efeitos, grupos de pratos, filtro por categoria e formulário.
 - `components/MealDetails.jsx`: recebe o prato pela prop `meal` e mostra nome, categoria, origem e ingredientes em um modal. A prop `onClose` limpa a seleção quando o modal fecha.
-- `services/mealApi.js`: função `getMeals()`, responsável pelo Fetch e pela leitura do JSON.
+- `services/mealApi.js`: funções que buscam categorias, pratos de cada categoria e detalhes por ID.
 - `main.jsx`: inicia o React.
 - `index.css`: importa Tailwind e define os estilos globais.
 
@@ -89,17 +89,17 @@ npm run build
 
 ## Consumo da API
 
-A aplicação chama `getMeals()` dentro de um `useEffect`. O serviço consulta:
+A aplicação chama `getMealsGroupedByCategory(5)` dentro de um `useEffect`. Primeiro, o serviço consulta as categorias:
 
 ```text
-https://www.themealdb.com/api/json/v1/1/search.php?s=
+https://www.themealdb.com/api/json/v1/1/list.php?c=list
 ```
 
-Essa consulta retorna uma seleção de pratos, não todo o catálogo da TheMealDB. O serviço verifica `response.ok`, lê `response.json()` e retorna `data.meals ?? []`. Os objetos mantêm os campos originais da API.
+Depois, para cada categoria, busca os pratos na rota `filter.php?c=`, guarda os cinco primeiros com `slice(0, 5)` e monta os grupos exibidos no cardápio. As consultas das categorias são executadas em paralelo com `Promise.all`.
 
-O estado `pratos` recebe a lista. As categorias são extraídas desses pratos com `map` e `Set`; o filtro usa `filter` no navegador, sem outra requisição. “Todos” mostra todos os pratos recebidos.
+O estado `pratosPorCategoria` recebe os grupos. O filtro continua sendo feito no navegador: “Todos” mostra todos os grupos, enquanto outra opção mostra somente a categoria escolhida.
 
-Ao clicar em “Ver detalhes”, o objeto é guardado em `pratoSelecionado` e o componente de detalhes aparece sobre o cardápio, mantendo o filtro e a lista ao fundo. Um `for` percorre `strIngredient1` até `strIngredient20` e exibe apenas campos preenchidos. Não há busca por ID porque os detalhes já vieram na primeira resposta.
+A busca por categoria retorna apenas dados resumidos. Por isso, ao clicar em “Ver detalhes”, `getMealById()` consulta `lookup.php?i=` e guarda o objeto completo em `pratoSelecionado`. O componente de detalhes aparece sobre o cardápio, mantendo o filtro e a lista ao fundo. Um `for` percorre `strIngredient1` até `strIngredient20` e exibe apenas campos preenchidos.
 
 O modal usa o elemento HTML `dialog`. O `useRef` guarda uma referência ao elemento, e o `useEffect` chama `showModal()` quando o componente aparece. O navegador controla o foco e permite fechar por Esc; o botão “Fechar” chama `close()`. O evento `onClose` limpa o prato selecionado. O fundo fica escurecido e sem rolagem enquanto o modal está aberto; listas longas rolam dentro dele.
 
@@ -114,8 +114,8 @@ O botão de download mostra um aviso de disponibilidade futura; não existe apli
 1. Mostrar as seções da landing page, o menu fixo e o layout no celular.
 2. Abrir `mealApi.js`: explicar `async/await`, `fetch`, `response.ok` e JSON.
 3. Abrir `App.jsx`: explicar como `useEffect` carrega os pratos e `useState` atualiza a tela.
-4. Escolher uma categoria: explicar que `Set` remove categorias repetidas e `filter` seleciona os pratos.
-5. Abrir um prato: explicar as props de `MealDetails` e o laço dos ingredientes.
+4. Escolher uma categoria: explicar como o filtro seleciona o grupo e como `slice` limita cada categoria a cinco pratos.
+5. Abrir um prato: explicar a busca dos detalhes por ID, as props de `MealDetails` e o laço dos ingredientes.
 6. Demonstrar o formulário e esclarecer oralmente seu funcionamento apenas no navegador.
 7. Mostrar exemplos de classes Tailwind, como `sm:grid-cols-2` e `lg:grid-cols-3`, e explicar o build e o deploy.
 
