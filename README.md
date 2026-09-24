@@ -6,7 +6,7 @@ O GourmetOn é uma landing page fictícia para um aplicativo de delivery. A pág
 
 ## Deploy
 
-**Aplicação publicada:** https://cp5-web-correto.vercel.app/
+**Aplicação publicada:** https://gourmet-on-web5.vercel.app/
 
 Para publicar uma nova versão, importe o repositório na Vercel e confira:
 
